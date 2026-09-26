@@ -43,6 +43,7 @@ rtk pnpm --filter @verify/backend dev
 ## Checks
 
 ```bash
+rtk pnpm lint
 rtk pnpm typecheck
 rtk pnpm test
 rtk pnpm build

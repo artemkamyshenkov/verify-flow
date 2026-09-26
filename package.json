@@ -8,7 +8,14 @@
   "scripts": {
     "dev": "pnpm --recursive --parallel run dev",
     "build": "pnpm --recursive run build",
+    "lint": "eslint apps",
     "typecheck": "pnpm --recursive run typecheck",
     "test": "pnpm --recursive --if-present run test"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.11.0",
+    "globals": "^17.12.0",
+    "typescript-eslint": "^8.70.1"
   }
 }
