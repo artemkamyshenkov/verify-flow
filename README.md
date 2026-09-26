@@ -4,10 +4,17 @@ Minimal pnpm monorepo for a React web application and a Fastify backend.
 
 ## Requirements
 
-- Node.js 24+
+- Node.js 24.21.0
 - pnpm 12.6.0
 
 The repository-level `.npmrc` uses the public npm registry instead of the global registry configuration.
+
+Select the pinned Node.js version with nvm:
+
+```bash
+nvm install
+nvm use
+```
 
 ## Install
 
