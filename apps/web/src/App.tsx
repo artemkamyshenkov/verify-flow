@@ -1,4 +1,5 @@
-import { Box, Button, Container, Group, Stack, Text, Title } from '@mantine/core'
+import { Box, Container, Group, Stack, Text, Title } from '@mantine/core'
+import { SessionView } from './features/session/view'
 
 export function App() {
   return (
@@ -27,9 +28,7 @@ export function App() {
               Создайте сессию, чтобы связать компьютер и телефон
               и пройти проверку.
             </Text>
-            <Button size="md" radius="md" mt="sm">
-              Начать сессию
-            </Button>
+            <SessionView />
           </Stack>
         </Container>
       </Box>

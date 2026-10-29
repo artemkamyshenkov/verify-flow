@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { ClientType, Session, SessionClient } from "./session.js";
+import type { ClientType } from "@verify/contracts";
+import type { Session, SessionClient } from "./session.js";
 import { SessionRepository } from "./repository.js";
 
 const SESSION_TTL_MS = 15 * 60 * 1000;

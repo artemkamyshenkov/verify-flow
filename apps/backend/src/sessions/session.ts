@@ -1,6 +1,4 @@
-export type SessionStatus = "created" | "active";
-
-export type ClientType = "desktop" | "mobile";
+import type { ClientType, SessionStatus } from "@verify/contracts";
 
 export type SessionClient<Role extends ClientType> = {
   id: string;
@@ -15,8 +13,4 @@ export type Session = {
   expiresAt: Date;
   desktopClient: SessionClient<"desktop"> | null;
   mobileClient: SessionClient<"mobile"> | null;
-};
-
-export type CreateSession = {
-  clientType: ClientType;
 };

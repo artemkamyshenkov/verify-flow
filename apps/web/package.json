@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@verify/contracts": "workspace:*",
     "@mantine/core": "^9.7.4",
     "@mantine/hooks": "^9.7.4",
     "react": "^19.3.0",
