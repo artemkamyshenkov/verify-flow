@@ -1,5 +1,5 @@
-import { Box, Container, Group, Stack, Text, Title } from '@mantine/core'
-import { SessionView } from './features/session/view'
+import { Box, Container, Group, Text } from '@mantine/core'
+import { Outlet } from 'react-router'
 
 export function App() {
   return (
@@ -14,23 +14,7 @@ export function App() {
       </Box>
 
       <Box component="main" className="app-main">
-        <Container size="sm" py="xl">
-          <Stack align="center" gap="lg" ta="center">
-            <Text size="xs" fw={600} c="blue" tt="uppercase" lts="0.12em">
-              Одна сессия · Два устройства
-            </Text>
-            <Title order={1} className="app-title">
-              Начните здесь.
-              <br />
-              Продолжите на телефоне.
-            </Title>
-            <Text c="dimmed" size="lg" maw={420}>
-              Создайте сессию, чтобы связать компьютер и телефон
-              и пройти проверку.
-            </Text>
-            <SessionView />
-          </Stack>
-        </Container>
+        <Outlet />
       </Box>
 
       <Box component="footer" className="app-footer">
