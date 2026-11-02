@@ -10,7 +10,7 @@ export async function request<T>(
     headers.set("Content-Type", "application/json");
   }
 
-  const baseUrl = "http://127.0.0.1:3000";
+  const baseUrl = "/api";
   const url = `${baseUrl}${path}`;
 
   const response = await fetch(url, { ...options, headers });

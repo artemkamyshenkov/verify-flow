@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { ClientType } from "@verify/contracts";
-import type { Session, SessionClient } from "./session.js";
+import { createSessionClient, type Session } from "./session.js";
 import { SessionRepository } from "./repository.js";
 
 const SESSION_TTL_MS = 15 * 60 * 1000;
@@ -14,17 +14,6 @@ export class CreateSession {
     this.repository = repository;
   }
 
-  private createSessionClient<Role extends ClientType>(
-    role: Role,
-    joinedAt: Date,
-  ): SessionClient<Role> {
-    return {
-      id: randomUUID(),
-      role,
-      joinedAt,
-    };
-  }
-
   async execute(command: CreateSessionCommand): Promise<Session> {
     const createdAt = new Date();
     const expiresAt = new Date(createdAt.getTime() + SESSION_TTL_MS);
@@ -36,11 +25,11 @@ export class CreateSession {
       expiresAt,
       desktopClient:
         command.clientType === "desktop"
-          ? this.createSessionClient("desktop", createdAt)
+          ? createSessionClient("desktop", createdAt)
           : null,
       mobileClient:
         command.clientType === "mobile"
-          ? this.createSessionClient("mobile", createdAt)
+          ? createSessionClient("mobile", createdAt)
           : null,
     };
 

@@ -6,6 +6,7 @@ import fastify, {
 import { CreateSession } from "./sessions/create-session.js";
 import { InMemorySessionRepository } from "./sessions/in-memory-repository.js";
 import { sessionRoutes } from "./sessions/route.js";
+import { JoinSession } from "./sessions/join-session.js";
 
 export function buildApp(options: FastifyServerOptions = {}): FastifyInstance {
   const app = fastify(options);
@@ -18,8 +19,9 @@ export function buildApp(options: FastifyServerOptions = {}): FastifyInstance {
 
   const repository = new InMemorySessionRepository();
   const createSession = new CreateSession(repository);
+  const joinSession = new JoinSession(repository);
 
-  app.register(sessionRoutes, { createSession });
+  app.register(sessionRoutes, { prefix: "/api", createSession, joinSession });
 
   return app;
 }

@@ -22,7 +22,7 @@ for (const origin of ['http://localhost:5173', 'http://127.0.0.1:5173']) {
 
     const preflight = await app.inject({
       method: 'OPTIONS',
-      url: '/sessions',
+      url: '/api/sessions',
       headers: {
         origin,
         'access-control-request-method': 'POST',
@@ -37,7 +37,7 @@ for (const origin of ['http://localhost:5173', 'http://127.0.0.1:5173']) {
 
     const response = await app.inject({
       method: 'POST',
-      url: '/sessions',
+      url: '/api/sessions',
       headers: { origin },
       payload: { clientType: 'desktop' },
     })
