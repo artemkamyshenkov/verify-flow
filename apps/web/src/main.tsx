@@ -8,6 +8,7 @@ import { StartPage } from "./pages/start";
 import { ConnectPage } from "./pages/connect";
 import "./index.css";
 import { JoinPage } from "./pages/join";
+import { CapturePage } from "./pages/capture";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -21,6 +22,10 @@ createRoot(document.getElementById("root")!).render(
               element={<ConnectPage />}
             />
             <Route path="sessions/:sessionId/join" element={<JoinPage />} />
+            <Route
+              path="sessions/:sessionId/capture"
+              element={<CapturePage />}
+            />
           </Route>
         </Routes>
       </BrowserRouter>

@@ -1,16 +1,17 @@
 import { Button, Container, Stack, Text } from "@mantine/core";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { useJoinSession } from "../features/session/use-session";
 
 export function JoinPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
+  const navigate = useNavigate();
   const { handleJoinSession, isLoading, error } = useJoinSession(sessionId);
 
   async function handleJoin() {
     const result = await handleJoinSession();
 
     if (result.ok) {
-      console.log("JOIN OK");
+      navigate(`/sessions/${sessionId}/capture`);
     }
   }
 
