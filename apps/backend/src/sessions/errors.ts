@@ -18,3 +18,10 @@ export class MobileClientAlreadyJoinedError extends Error {
     this.name = "MobileClientAlreadyJoinedError";
   }
 }
+
+export class MobileClientNotJoinedError extends Error {
+  constructor() {
+    super("Mobile client has not joined the session");
+    this.name = "MobileClientNotJoinedError";
+  }
+}

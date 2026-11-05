@@ -1,10 +1,7 @@
 import { SessionRepository } from "./repository.js";
 import { createSessionClient, Session } from "./session.js";
-import {
-  MobileClientAlreadyJoinedError,
-  SessionExpiredError,
-  SessionNotFoundError,
-} from "./errors.js";
+import { MobileClientAlreadyJoinedError } from "./errors.js";
+import { getValidSession } from "./get-valid-session.js";
 
 export class JoinSession {
   constructor(private readonly repository: SessionRepository) {
@@ -12,15 +9,7 @@ export class JoinSession {
   }
 
   async execute(sessionId: string): Promise<Session> {
-    const session = await this.repository.findById(sessionId);
-
-    if (!session) {
-      throw new SessionNotFoundError();
-    }
-
-    if (session.expiresAt.getTime() <= Date.now()) {
-      throw new SessionExpiredError();
-    }
+    const session = await getValidSession(this.repository, sessionId);
 
     if (session.mobileClient) {
       throw new MobileClientAlreadyJoinedError();

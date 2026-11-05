@@ -9,8 +9,13 @@ export function SessionView() {
   async function handleCreate() {
     const result = await handleCreateSession();
 
-    if (result.ok) {
+    if (!result.ok) {
+      return;
+    }
+    if (result.data.mobileClient === null) {
       navigate(`/sessions/${result.data.id}/connect`);
+    } else {
+      navigate(`/sessions/${result.data.id}/capture`);
     }
   }
 
