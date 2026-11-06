@@ -1,4 +1,5 @@
 import type { FastifyPluginAsync } from "fastify";
+import type { UploadPhotoResponse } from "@verify/contracts";
 import type { UploadPhoto } from "./upload-photo.js";
 import type { Photo } from "./repository.js";
 import { UnsupportedPhotoTypeError } from "./errors.js";
@@ -16,7 +17,13 @@ export const photoRoutes: FastifyPluginAsync<PhotoRoutesOptions> = async (
   app,
   { uploadPhoto },
 ) => {
-  app.post<{ Params: { sessionId: string } }>(
+  app.post<{
+    Params: { sessionId: string };
+    Reply: {
+      201: UploadPhotoResponse;
+      "4xx": { message: string };
+    };
+  }>(
     "/sessions/:sessionId/photo",
     {
       schema: {

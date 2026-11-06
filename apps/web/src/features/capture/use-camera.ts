@@ -1,11 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function useCamera() {
   const [error, setError] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const isMountedRef = useRef(false);
 
   const enableCamera = async () => {
+    setError(undefined);
     try {
       setIsLoading(true);
       const videoStream = await navigator.mediaDevices.getUserMedia({
@@ -14,17 +16,28 @@ export function useCamera() {
         },
         audio: false,
       });
+
+      if (!isMountedRef.current) {
+        videoStream.getTracks().forEach((track) => track.stop());
+        return;
+      }
+
       setStream(videoStream);
     } catch {
-      setError("Ошибка доступа к камере");
+      if (isMountedRef.current) {
+        setError("Ошибка доступа к камере");
+      }
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
     }
   };
 
   const takePhoto = async (video: HTMLVideoElement): Promise<Blob> => {
+    setError(undefined);
     const { videoHeight, videoWidth } = video;
-    if (!videoHeight || !videoHeight) {
+    if (!videoHeight || !videoWidth) {
       setError("Видео не готово");
     }
 
@@ -57,8 +70,13 @@ export function useCamera() {
   };
 
   useEffect(() => {
-    return stream?.getTracks().forEach((track) => track.stop());
-  }, []);
+    isMountedRef.current = true;
+
+    return () => {
+      isMountedRef.current = false;
+      stream?.getTracks().forEach((track) => track.stop());
+    };
+  }, [stream]);
 
   return { error, isLoading, enableCamera, stream, takePhoto, setError };
 }

@@ -1,13 +1,17 @@
 import { Container, Stack, Button, Text } from "@mantine/core";
 import { useCamera } from "../features/capture/use-camera";
 import { useEffect, useRef, useState } from "react";
+import { uploadPhoto } from "../features/capture/api";
+import { useParams } from "react-router";
 
 export function CapturePage() {
+  const { sessionId } = useParams<{ sessionId: string }>();
   const { error, isLoading, enableCamera, stream, takePhoto, setError } =
     useCamera();
 
   const [imageSrc, setImageSrc] = useState<string>();
-
+  const [blob, setBlob] = useState<Blob>();
+  const [isUploading, setIsUploading] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const handleTakePhoto = async () => {
@@ -16,6 +20,7 @@ export function CapturePage() {
       const blob = await takePhoto(videoRef.current);
       const src = URL.createObjectURL(blob);
 
+      setBlob(blob);
       setImageSrc(src);
     } catch (error) {
       setError((error as Error).message);
@@ -23,7 +28,27 @@ export function CapturePage() {
   };
 
   const handleRetakePhoto = () => {
+    setError(undefined);
     setImageSrc(undefined);
+  };
+
+  const handleSendPhoto = async () => {
+    if (!blob || !sessionId || isUploading) return;
+
+    setError(undefined);
+    setIsUploading(true);
+
+    try {
+      const result = await uploadPhoto(blob, sessionId);
+
+      if (result.ok) {
+        console.log("UPLOADED");
+      } else {
+        setError("Upload photo error");
+      }
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   useEffect(() => {
@@ -68,8 +93,13 @@ export function CapturePage() {
 
         {imageSrc && <img src={imageSrc} />}
         {imageSrc && (
-          <Button size="md" radius="md" onClick={handleRetakePhoto}>
+          <Button size="md" radius="md" onClick={handleRetakePhoto} disabled={isUploading}>
             Переснять
+          </Button>
+        )}
+        {imageSrc && blob && (
+          <Button size="md" radius="md" onClick={handleSendPhoto} loading={isUploading}>
+            Отправить фото
           </Button>
         )}
         {error && (
