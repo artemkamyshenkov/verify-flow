@@ -37,8 +37,8 @@ export function useCamera() {
   const takePhoto = async (video: HTMLVideoElement): Promise<Blob> => {
     setError(undefined);
     const { videoHeight, videoWidth } = video;
-    if (!videoHeight || !videoWidth) {
-      setError("Видео не готово");
+    if (!videoHeight || !videoWidth || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+      throw new Error("Видео не готово");
     }
 
     const canvas = document.createElement("canvas");
@@ -48,20 +48,19 @@ export function useCamera() {
     const context = canvas.getContext("2d");
 
     if (!context) {
-      setError("Не удалось сделать фото");
+      throw new Error("Не удалось сделать фото");
     }
 
-    context?.drawImage(video, 0, 0);
+    context.drawImage(video, 0, 0);
 
     return new Promise((resolve, reject) => {
       canvas.toBlob(
         (blob) => {
-          if (blob) {
-            resolve(blob);
+          if (!blob || blob.size === 0) {
+            reject(new Error("Не удалось сделать фото"));
+            return;
           }
-          const message = "Не удалось сделать фото";
-
-          reject(new Error(message));
+          resolve(blob);
         },
         "image/jpeg",
         0.9,

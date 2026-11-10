@@ -36,3 +36,12 @@ body {
 .app-footer {
   border-top: 1px solid var(--mantine-color-gray-2);
 }
+
+.capture-media {
+  max-width: 100%;
+  height: auto;
+}
+
+.capture-media:not([hidden]) {
+  display: block;
+}

@@ -9,6 +9,7 @@ import { ConnectPage } from "./pages/connect";
 import "./index.css";
 import { JoinPage } from "./pages/join";
 import { CapturePage } from "./pages/capture";
+import { CompletePage } from "./pages/complete";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
@@ -25,6 +26,10 @@ createRoot(document.getElementById("root")!).render(
             <Route
               path="sessions/:sessionId/capture"
               element={<CapturePage />}
+            />
+            <Route
+              path="sessions/:sessionId/complete"
+              element={<CompletePage />}
             />
           </Route>
         </Routes>

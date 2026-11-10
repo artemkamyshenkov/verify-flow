@@ -1,4 +1,5 @@
 import type { FastifyPluginAsync } from "fastify";
+import type { EventEmitter } from "node:events";
 import type { UploadPhotoResponse } from "@verify/contracts";
 import type { UploadPhoto } from "./upload-photo.js";
 import type { Photo } from "./repository.js";
@@ -11,11 +12,12 @@ import {
 
 type PhotoRoutesOptions = {
   uploadPhoto: UploadPhoto;
+  events: EventEmitter;
 };
 
 export const photoRoutes: FastifyPluginAsync<PhotoRoutesOptions> = async (
   app,
-  { uploadPhoto },
+  { uploadPhoto, events },
 ) => {
   app.post<{
     Params: { sessionId: string };
@@ -61,6 +63,7 @@ export const photoRoutes: FastifyPluginAsync<PhotoRoutesOptions> = async (
         }
 
         await uploadPhoto.execute(photo);
+        events.emit(`photo-uploaded:${photo.sessionId}`);
         return reply.code(201).send({ message: "Photo uploaded" });
       } catch (error) {
         if (error instanceof SessionNotFoundError) {

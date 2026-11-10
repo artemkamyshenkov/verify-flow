@@ -2,16 +2,20 @@ import { Container, Stack, Button, Text } from "@mantine/core";
 import { useCamera } from "../features/capture/use-camera";
 import { useEffect, useRef, useState } from "react";
 import { uploadPhoto } from "../features/capture/api";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 
 export function CapturePage() {
   const { sessionId } = useParams<{ sessionId: string }>();
+  const navigate = useNavigate();
   const { error, isLoading, enableCamera, stream, takePhoto, setError } =
     useCamera();
 
   const [imageSrc, setImageSrc] = useState<string>();
   const [blob, setBlob] = useState<Blob>();
-  const [isUploading, setIsUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<
+    "idle" | "uploading" | "success" | "error"
+  >("idle");
+  const isUploading = uploadStatus === "uploading";
   const videoRef = useRef<HTMLVideoElement>(null);
 
   const handleTakePhoto = async () => {
@@ -22,6 +26,7 @@ export function CapturePage() {
 
       setBlob(blob);
       setImageSrc(src);
+      setUploadStatus("idle");
     } catch (error) {
       setError((error as Error).message);
     }
@@ -30,24 +35,24 @@ export function CapturePage() {
   const handleRetakePhoto = () => {
     setError(undefined);
     setImageSrc(undefined);
+    setBlob(undefined);
+    setUploadStatus("idle");
   };
 
   const handleSendPhoto = async () => {
-    if (!blob || !sessionId || isUploading) return;
+    if (!blob || !sessionId || isUploading || uploadStatus === "success") return;
 
     setError(undefined);
-    setIsUploading(true);
+    setUploadStatus("uploading");
 
-    try {
-      const result = await uploadPhoto(blob, sessionId);
+    const result = await uploadPhoto(blob, sessionId);
 
-      if (result.ok) {
-        console.log("UPLOADED");
-      } else {
-        setError("Upload photo error");
-      }
-    } finally {
-      setIsUploading(false);
+    if (result.ok) {
+      setUploadStatus("success");
+      navigate(`/sessions/${sessionId}/complete`, { replace: true });
+    } else {
+      setUploadStatus("error");
+      setError(result.error);
     }
   };
 
@@ -79,6 +84,7 @@ export function CapturePage() {
           </Button>
         )}
         <video
+          className="capture-media"
           ref={videoRef}
           autoPlay
           playsInline
@@ -91,13 +97,13 @@ export function CapturePage() {
           </Button>
         )}
 
-        {imageSrc && <img src={imageSrc} />}
+        {imageSrc && <img className="capture-media" src={imageSrc} alt="Предпросмотр снимка документа" />}
         {imageSrc && (
           <Button size="md" radius="md" onClick={handleRetakePhoto} disabled={isUploading}>
             Переснять
           </Button>
         )}
-        {imageSrc && blob && (
+        {imageSrc && blob && uploadStatus !== "success" && (
           <Button size="md" radius="md" onClick={handleSendPhoto} loading={isUploading}>
             Отправить фото
           </Button>
