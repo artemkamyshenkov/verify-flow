@@ -37,7 +37,11 @@ export function useCamera() {
   const takePhoto = async (video: HTMLVideoElement): Promise<Blob> => {
     setError(undefined);
     const { videoHeight, videoWidth } = video;
-    if (!videoHeight || !videoWidth || video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA) {
+    if (
+      !videoHeight ||
+      !videoWidth ||
+      video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA
+    ) {
       throw new Error("Видео не готово");
     }
 
@@ -77,5 +81,12 @@ export function useCamera() {
     };
   }, [stream]);
 
-  return { error, isLoading, enableCamera, stream, takePhoto, setError };
+  return {
+    error,
+    isLoading,
+    enableCamera,
+    stream,
+    takePhoto,
+    setError,
+  };
 }

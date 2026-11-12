@@ -45,3 +45,17 @@ body {
 .capture-media:not([hidden]) {
   display: block;
 }
+
+.camera:not([hidden]) {
+  position: relative;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.camera-frame {
+  position: absolute;
+  inset: 20% 10%;
+  border: 2px solid white;
+  border-radius: 8px;
+  pointer-events: none;
+}
