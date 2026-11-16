@@ -25,7 +25,7 @@ export function useVideoFrame() {
     return canvas;
   };
 
-  const analyzeFrame = (canvas: HTMLCanvasElement) => {
+  const getFrameImageData = (canvas: HTMLCanvasElement) => {
     const context = canvas.getContext("2d");
 
     if (!context) {
@@ -40,22 +40,8 @@ export function useVideoFrame() {
 
     const imageData = context.getImageData(x, y, width, height);
 
-    let brightnessSum = 0;
-    for (let i = 0; i < imageData.data.length; i += 4) {
-      const data = imageData.data;
-      const red = data[i];
-      const green = data[i + 1];
-      const blue = data[i + 2];
-
-      const brightness = (red + green + blue) / 3;
-      brightnessSum += brightness;
-    }
-
-    const pixelsCount = imageData.data.length / 4;
-    const averageBrightness = Math.round(brightnessSum / pixelsCount);
-
-    return averageBrightness;
+    return imageData;
   };
 
-  return { getVideoFrame, analyzeFrame };
+  return { getVideoFrame, getFrameImageData };
 }

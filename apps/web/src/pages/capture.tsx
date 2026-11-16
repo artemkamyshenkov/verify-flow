@@ -4,6 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { uploadPhoto } from "../features/capture/api";
 import { useNavigate, useParams } from "react-router";
 import { useVideoFrame } from "../features/capture/use-video-frame";
+import { useFrameAnalysis } from "../features/capture/worker/use-frame-analysis";
+
+const LOW_BRIGHTNESS_THRESHOLD = 50;
 
 export function CapturePage() {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -11,10 +14,13 @@ export function CapturePage() {
   const { error, isLoading, enableCamera, stream, takePhoto, setError } =
     useCamera();
 
-  const { getVideoFrame, analyzeFrame } = useVideoFrame();
+  const { analyzeFrame, frameData } = useFrameAnalysis();
+
+  const { getVideoFrame, getFrameImageData } = useVideoFrame();
 
   const [imageSrc, setImageSrc] = useState<string>();
   const [blob, setBlob] = useState<Blob>();
+
   const [uploadStatus, setUploadStatus] = useState<
     "idle" | "uploading" | "success" | "error"
   >("idle");
@@ -34,7 +40,7 @@ export function CapturePage() {
       setError((error as Error).message);
     }
   };
-
+  console.log(frameData);
   const handleRetakePhoto = () => {
     setError(undefined);
     setImageSrc(undefined);
@@ -75,21 +81,29 @@ export function CapturePage() {
   }, [imageSrc]);
 
   useEffect(() => {
-    if (!stream) {
+    if (!stream || imageSrc) {
       return;
     }
 
     const intervalId = setInterval(() => {
-      if (!videoRef.current) return;
+      const video = videoRef.current;
+      if (
+        !video ||
+        !video.videoWidth ||
+        !video.videoHeight ||
+        video.readyState < HTMLMediaElement.HAVE_CURRENT_DATA
+      )
+        return;
 
-      const frame = getVideoFrame(videoRef.current);
-      analyzeFrame(frame);
+      const frame = getVideoFrame(video);
+      const imageData = getFrameImageData(frame);
+      analyzeFrame(imageData);
     }, 1000);
 
     return () => {
       clearInterval(intervalId);
     };
-  }, [stream]);
+  }, [stream, imageSrc]);
 
   return (
     <Container size="sm" py="xl">
@@ -114,6 +128,15 @@ export function CapturePage() {
           />
           <div className="camera-frame" aria-hidden="true" />
         </div>
+        {stream &&
+          !imageSrc &&
+          frameData?.averageBrightness &&
+          frameData.averageBrightness !== null &&
+          frameData.averageBrightness < LOW_BRIGHTNESS_THRESHOLD && (
+            <Text c="orange" size="sm" ta="center" role="status">
+              Слишком темно. Добавьте света.
+            </Text>
+          )}
         {!!stream && !imageSrc && (
           <Button size="md" radius="md" onClick={handleTakePhoto}>
             Сделать фото
