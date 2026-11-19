@@ -59,3 +59,11 @@ body {
   border-radius: 8px;
   pointer-events: none;
 }
+
+.camera-frame[data-status="ready"] {
+  border-color: var(--mantine-color-green-6);
+}
+
+.camera-frame[data-status="not-ready"] {
+  border-color: var(--mantine-color-red-6);
+}

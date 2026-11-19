@@ -7,6 +7,7 @@ import { useVideoFrame } from "../features/capture/use-video-frame";
 import { useFrameAnalysis } from "../features/capture/worker/use-frame-analysis";
 
 const LOW_BRIGHTNESS_THRESHOLD = 50;
+const MIN_SHARPNESS = 4;
 
 export function CapturePage() {
   const { sessionId } = useParams<{ sessionId: string }>();
@@ -15,6 +16,11 @@ export function CapturePage() {
     useCamera();
 
   const { analyzeFrame, frameData } = useFrameAnalysis();
+  const isFrameReady =
+    frameData !== null &&
+    frameData.averageBrightness >= LOW_BRIGHTNESS_THRESHOLD &&
+    frameData.sharpness >= MIN_SHARPNESS;
+  const frameStatus = isFrameReady ? "ready" : "not-ready";
 
   const { getVideoFrame, getFrameImageData } = useVideoFrame();
 
@@ -126,12 +132,15 @@ export function CapturePage() {
             playsInline
             muted
           />
-          <div className="camera-frame" aria-hidden="true" />
+          <div
+            className="camera-frame"
+            data-status={frameData === null ? undefined : frameStatus}
+            aria-hidden="true"
+          />
         </div>
         {stream &&
           !imageSrc &&
-          frameData?.averageBrightness &&
-          frameData.averageBrightness !== null &&
+          frameData !== null &&
           frameData.averageBrightness < LOW_BRIGHTNESS_THRESHOLD && (
             <Text c="orange" size="sm" ta="center" role="status">
               Слишком темно. Добавьте света.

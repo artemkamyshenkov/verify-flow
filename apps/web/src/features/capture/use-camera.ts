@@ -45,9 +45,14 @@ export function useCamera() {
       throw new Error("Видео не готово");
     }
 
+    const x = Math.round(videoWidth * 0.1);
+    const y = Math.round(videoHeight * 0.2);
+    const width = Math.round(videoWidth * 0.8);
+    const height = Math.round(videoHeight * 0.6);
+
     const canvas = document.createElement("canvas");
-    canvas.width = videoWidth;
-    canvas.height = videoHeight;
+    canvas.width = width;
+    canvas.height = height;
 
     const context = canvas.getContext("2d");
 
@@ -55,7 +60,7 @@ export function useCamera() {
       throw new Error("Не удалось сделать фото");
     }
 
-    context.drawImage(video, 0, 0);
+    context.drawImage(video, x, y, width, height, 0, 0, width, height);
 
     return new Promise((resolve, reject) => {
       canvas.toBlob(
