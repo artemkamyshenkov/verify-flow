@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
+import type { DocumentCorner } from "./find-document-corners";
 
 type FrameData = {
   averageBrightness: number;
   sharpness: number;
+  corners: DocumentCorner[] | null;
 };
 export function useFrameAnalysis() {
   const [frameData, setFrameData] = useState<FrameData | null>(null);
@@ -24,11 +26,7 @@ export function useFrameAnalysis() {
     worker.current = newWorker;
 
     newWorker.onmessage = (event: MessageEvent<FrameData>) => {
-      const { averageBrightness, sharpness } = event.data;
-      setFrameData({
-        averageBrightness,
-        sharpness,
-      });
+      setFrameData(event.data);
     };
 
     return () => {

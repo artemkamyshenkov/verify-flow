@@ -12,6 +12,7 @@
   "dependencies": {
     "@mantine/core": "^9.7.4",
     "@mantine/hooks": "^9.7.4",
+    "@techstark/opencv-js": "5.0.0-release.1",
     "@verify/contracts": "workspace:*",
     "qrcode.react": "^4.2.0",
     "react": "^19.3.0",

@@ -23,7 +23,7 @@ export function CapturePage() {
   const frameStatus = isFrameReady ? "ready" : "not-ready";
 
   const { getVideoFrame, getFrameImageData } = useVideoFrame();
-
+  console.log(frameData);
   const [imageSrc, setImageSrc] = useState<string>();
   const [blob, setBlob] = useState<Blob>();
 
@@ -32,6 +32,10 @@ export function CapturePage() {
   >("idle");
   const isUploading = uploadStatus === "uploading";
   const videoRef = useRef<HTMLVideoElement>(null);
+  const debugFrameRef = useRef<HTMLCanvasElement>(null);
+  const showDebugFrame = new URLSearchParams(window.location.search).has(
+    "debugContours",
+  );
 
   const handleTakePhoto = async () => {
     try {
@@ -46,7 +50,7 @@ export function CapturePage() {
       setError((error as Error).message);
     }
   };
-  console.log(frameData);
+
   const handleRetakePhoto = () => {
     setError(undefined);
     setImageSrc(undefined);
@@ -103,8 +107,16 @@ export function CapturePage() {
 
       const frame = getVideoFrame(video);
       const imageData = getFrameImageData(frame);
+      const debugFrame = debugFrameRef.current;
+      if (debugFrame) {
+        if (debugFrame.width !== imageData.width)
+          debugFrame.width = imageData.width;
+        if (debugFrame.height !== imageData.height)
+          debugFrame.height = imageData.height;
+        debugFrame.getContext("2d")?.putImageData(imageData, 0, 0);
+      }
       analyzeFrame(imageData);
-    }, 1000);
+    }, 250);
 
     return () => {
       clearInterval(intervalId);
@@ -137,7 +149,28 @@ export function CapturePage() {
             data-status={frameData === null ? undefined : frameStatus}
             aria-hidden="true"
           />
+          {!imageSrc && frameData?.corners && (
+            <svg
+              className="camera-detected-contour"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              <polygon
+                points={frameData.corners
+                  .map(({ x, y }) => `${x * 100},${y * 100}`)
+                  .join(" ")}
+                vectorEffect="non-scaling-stroke"
+              />
+            </svg>
+          )}
         </div>
+        {showDebugFrame && stream && !imageSrc && (
+          <figure style={{ margin: 0, maxWidth: "100%" }}>
+            <figcaption>Кадр, который получает Worker</figcaption>
+            <canvas className="capture-media" ref={debugFrameRef} />
+          </figure>
+        )}
         {stream &&
           !imageSrc &&
           frameData !== null &&

@@ -1,3 +1,11 @@
+import cvModule from "@techstark/opencv-js";
+import { findDocumentCorners } from "./find-document-corners";
+
+const cvReady = Promise.resolve(cvModule).catch((error: unknown) => {
+  console.error("Не удалось загрузить OpenCV.js", error);
+  return null;
+});
+
 const calculateBrightness = (imageData: ImageData) => {
   let brightnessSum = 0;
   for (let i = 0; i < imageData.data.length; i += 4) {
@@ -38,11 +46,14 @@ const calculateSharpness = (imageData: ImageData) => {
   return comparisonCount === 0 ? 0 : differenceSum / comparisonCount;
 };
 
-self.onmessage = (event: MessageEvent<ImageData>) => {
+self.onmessage = async (event: MessageEvent<ImageData>) => {
   const imageData = event.data;
 
   const averageBrightness = calculateBrightness(imageData);
   const sharpness = calculateSharpness(imageData);
 
-  self.postMessage({ averageBrightness, sharpness });
+  const cv = await cvReady;
+  const corners = cv ? findDocumentCorners(cv, imageData) : null;
+
+  self.postMessage({ averageBrightness, sharpness, corners });
 };

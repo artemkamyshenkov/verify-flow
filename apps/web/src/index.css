@@ -52,12 +52,24 @@ body {
   max-width: 100%;
 }
 
-.camera-frame {
+.camera-frame,
+.camera-detected-contour {
   position: absolute;
   inset: 20% 10%;
+  pointer-events: none;
+}
+
+.camera-frame {
   border: 2px solid white;
   border-radius: 8px;
-  pointer-events: none;
+}
+
+.camera-detected-contour {
+  width: 80%;
+  height: 60%;
+  fill: none;
+  stroke: var(--mantine-color-cyan-4);
+  stroke-width: 2px;
 }
 
 .camera-frame[data-status="ready"] {
