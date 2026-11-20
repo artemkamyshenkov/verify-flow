@@ -1,24 +1,35 @@
 import { Text } from "@mantine/core";
-import { type RefObject, useEffect, useRef } from "react";
+import { type RefObject, useEffect, useEffectEvent, useRef } from "react";
 import { useVideoFrame } from "./use-video-frame";
 import { useFrameAnalysis } from "./worker/use-frame-analysis";
 
 const LOW_BRIGHTNESS_THRESHOLD = 50;
 const MIN_SHARPNESS = 4;
+const REQUIRED_READY_FRAMES = 3;
 
 type CameraPreviewProps = {
   stream: MediaStream | null;
   videoRef: RefObject<HTMLVideoElement | null>;
   hidden: boolean;
+  onAutoCapture: () => void;
 };
 
-export function CameraPreview({ stream, videoRef, hidden }: CameraPreviewProps) {
+export function CameraPreview({
+  stream,
+  videoRef,
+  hidden,
+  onAutoCapture,
+}: CameraPreviewProps) {
   const { analyzeFrame, frameData, isWorkerBusy } = useFrameAnalysis();
   const isFrameReady =
     frameData !== null &&
+    frameData.corners?.length === 4 &&
     frameData.averageBrightness >= LOW_BRIGHTNESS_THRESHOLD &&
     frameData.sharpness >= MIN_SHARPNESS;
   const frameStatus = isFrameReady ? "ready" : "not-ready";
+  const readyFrameCount = useRef(0);
+  const lastAnalyzedFrame = useRef(frameData);
+  const autoCapture = useEffectEvent(onAutoCapture);
 
   const { getVideoFrame, getFrameImageData } = useVideoFrame();
   const debugFrameRef = useRef<HTMLCanvasElement>(null);
@@ -31,6 +42,23 @@ export function CameraPreview({ stream, videoRef, hidden }: CameraPreviewProps) 
       videoRef.current.srcObject = stream;
     }
   }, [stream, videoRef]);
+
+  useEffect(() => {
+    const isNewFrame = lastAnalyzedFrame.current !== frameData;
+    lastAnalyzedFrame.current = frameData;
+
+    if (!stream || hidden || !isFrameReady) {
+      readyFrameCount.current = 0;
+      return;
+    }
+
+    if (!isNewFrame) return;
+
+    readyFrameCount.current++;
+    if (readyFrameCount.current === REQUIRED_READY_FRAMES) {
+      autoCapture();
+    }
+  }, [stream, hidden, frameData, isFrameReady]);
 
   useEffect(() => {
     if (!stream || hidden) {

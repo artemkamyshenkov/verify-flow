@@ -3,6 +3,8 @@ import { randomUUID } from "node:crypto";
 import { EventEmitter, once } from "node:events";
 import test from "node:test";
 import fastify from "fastify";
+import { buildApp } from "../app.js";
+import { InMemoryPhotoRepository } from "../photos/in-memory-repository.js";
 import { CreateSession } from "./create-session.js";
 import { JoinSession } from "./join-session.js";
 import { InMemorySessionRepository } from "./in-memory-repository.js";
@@ -18,6 +20,7 @@ function setup() {
     createSession,
     joinSession: new JoinSession(repository),
     events,
+    photos: new InMemoryPhotoRepository(),
   });
   return { app, repository, createSession, events };
 }
@@ -97,4 +100,48 @@ test("SSE sends session events and removes the listener on disconnect", async (t
   controller.abort();
   await removed;
   assert.equal(events.listenerCount(eventName), 0);
+});
+
+test("SSE reports a photo uploaded before the client connects", async (t) => {
+  const app = buildApp();
+  const controller = new AbortController();
+  t.after(async () => {
+    controller.abort();
+    await app.close();
+  });
+
+  const created = await app.inject({
+    method: "POST",
+    url: "/api/sessions",
+    payload: { clientType: "mobile" },
+  });
+  assert.equal(created.statusCode, 201);
+  const { id } = created.json<{ id: string }>();
+  const photo = new FormData();
+  photo.append("photo", new Blob([Uint8Array.of(0xff, 0xd8, 0xff, 0xe0)], {
+    type: "image/jpeg",
+  }), "photo.jpg");
+
+  const address = await app.listen({ host: "127.0.0.1", port: 0 });
+  const uploaded = await fetch(`${address}/api/sessions/${id}/photo`, {
+    method: "POST",
+    body: photo,
+    signal: AbortSignal.timeout(5000),
+  });
+  assert.equal(uploaded.status, 201);
+  await uploaded.body?.cancel();
+
+  const stream = await fetch(`${address}/api/sessions/${id}/events`, {
+    signal: AbortSignal.any([controller.signal, AbortSignal.timeout(5000)]),
+  });
+  assert.equal(stream.status, 200);
+  const reader = stream.body!.getReader();
+  const decoder = new TextDecoder();
+  let received = "";
+  while (!received.includes("event: photo-uploaded\ndata: {}\n\n")) {
+    const { done, value } = await reader.read();
+    assert.equal(done, false, "SSE closed before reporting the stored photo");
+    received += decoder.decode(value, { stream: true });
+  }
+  assert.match(received, /event: connected/);
 });

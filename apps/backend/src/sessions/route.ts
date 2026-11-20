@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync, FastifySchema } from "fastify";
 import type { EventEmitter } from "node:events";
+import type { PhotoRepository } from "../photos/repository.js";
 import type { CreateSession } from "./create-session.js";
 import type { CreateSessionRequest, SessionResponse } from "@verify/contracts";
 import type { JoinSession } from "./join-session.js";
@@ -14,6 +15,7 @@ type SessionRoutesOptions = {
   createSession: CreateSession;
   joinSession: JoinSession;
   events: EventEmitter;
+  photos: PhotoRepository;
 };
 
 function toSessionResponse(session: Session): SessionResponse {
@@ -38,7 +40,7 @@ function toSessionResponse(session: Session): SessionResponse {
 
 export const sessionRoutes: FastifyPluginAsync<SessionRoutesOptions> = async (
   app,
-  { createSession, joinSession, events },
+  { createSession, joinSession, events, photos },
 ) => {
   const createSessionSchema = {
     body: {
@@ -107,11 +109,13 @@ export const sessionRoutes: FastifyPluginAsync<SessionRoutesOptions> = async (
   );
 
   app.get<{ Params: { sessionId: string } }>("/sessions/:sessionId/events", async (request, reply) => {
-    const eventName = `photo-uploaded:${request.params.sessionId}`;
+    const { sessionId } = request.params;
+    const eventName = `photo-uploaded:${sessionId}`;
+    let sent = false;
     const onPhotoUploaded = () => {
-      if (!reply.raw.destroyed && !reply.raw.writableEnded) {
-        reply.raw.write("event: photo-uploaded\ndata: {}\n\n");
-      }
+      if (sent || reply.raw.destroyed || reply.raw.writableEnded) return;
+      sent = true;
+      reply.raw.write("event: photo-uploaded\ndata: {}\n\n");
     };
 
     events.on(eventName, onPhotoUploaded);
@@ -129,5 +133,12 @@ export const sessionRoutes: FastifyPluginAsync<SessionRoutesOptions> = async (
     reply.raw.write(
       'event: connected\ndata: {"message":"Соединение открыто"}\n\n',
     );
+
+    try {
+      if (await photos.findBySessionId(sessionId)) onPhotoUploaded();
+    } catch (error) {
+      request.log.error({ err: error, sessionId }, "Could not read photo status");
+      reply.raw.end();
+    }
   });
 };

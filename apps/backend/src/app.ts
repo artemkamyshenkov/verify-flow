@@ -33,8 +33,8 @@ export function buildApp(options: FastifyServerOptions = {}): FastifyInstance {
   const joinSession = new JoinSession(repository);
   const events = new EventEmitter();
 
-  app.register(sessionRoutes, { prefix: "/api", createSession, joinSession, events });
   const photos = new InMemoryPhotoRepository();
+  app.register(sessionRoutes, { prefix: "/api", createSession, joinSession, events, photos });
   const uploadPhoto = new UploadPhoto(photos, repository);
   app.register(photoRoutes, { prefix: "/api", uploadPhoto, events });
 

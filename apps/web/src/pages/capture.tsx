@@ -19,11 +19,15 @@ export function CapturePage() {
   >("idle");
   const isUploading = uploadStatus === "uploading";
   const videoRef = useRef<HTMLVideoElement>(null);
+  const isTakingPhoto = useRef(false);
 
   const handleTakePhoto = async () => {
+    const video = videoRef.current;
+    if (!video || imageSrc || isTakingPhoto.current) return;
+
+    isTakingPhoto.current = true;
     try {
-      if (!videoRef.current) return;
-      const blob = await takePhoto(videoRef.current);
+      const blob = await takePhoto(video);
       const src = URL.createObjectURL(blob);
 
       setBlob(blob);
@@ -31,6 +35,8 @@ export function CapturePage() {
       setUploadStatus("idle");
     } catch (error) {
       setError((error as Error).message);
+    } finally {
+      isTakingPhoto.current = false;
     }
   };
 
@@ -84,6 +90,7 @@ export function CapturePage() {
           stream={stream}
           videoRef={videoRef}
           hidden={Boolean(imageSrc)}
+          onAutoCapture={handleTakePhoto}
         />
         {!!stream && !imageSrc && (
           <Button size="md" radius="md" onClick={handleTakePhoto}>
