@@ -10,6 +10,7 @@ export function useFrameAnalysis() {
   const [frameData, setFrameData] = useState<FrameData | null>(null);
 
   const worker = useRef<Worker | null>(null);
+  const busyRef = useRef(false);
 
   useEffect(() => {
     if (worker.current) {
@@ -26,18 +27,36 @@ export function useFrameAnalysis() {
     worker.current = newWorker;
 
     newWorker.onmessage = (event: MessageEvent<FrameData>) => {
+      busyRef.current = false;
       setFrameData(event.data);
+    };
+
+    newWorker.onerror = () => {
+      busyRef.current = false;
     };
 
     return () => {
       newWorker.terminate();
       worker.current = null;
+      busyRef.current = false;
     };
   }, []);
 
   const analyzeFrame = (imageData: ImageData) => {
-    worker.current?.postMessage(imageData);
+    const currentWorker = worker.current;
+
+    if (!currentWorker || busyRef.current) return;
+
+    busyRef.current = true;
+    try {
+      currentWorker.postMessage(imageData);
+    } catch (error) {
+      busyRef.current = false;
+      throw error;
+    }
   };
 
-  return { analyzeFrame, frameData };
+  const isWorkerBusy = () => busyRef.current;
+
+  return { analyzeFrame, frameData, isWorkerBusy };
 }

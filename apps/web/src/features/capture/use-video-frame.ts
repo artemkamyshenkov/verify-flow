@@ -1,4 +1,8 @@
+import { useRef } from "react";
+
 export function useVideoFrame() {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
   const getVideoFrame = (video: HTMLVideoElement) => {
     const { videoHeight, videoWidth } = video;
     if (
@@ -9,10 +13,16 @@ export function useVideoFrame() {
       throw new Error("Видео не готово");
     }
 
-    const canvas = document.createElement("canvas");
+    if (canvasRef.current === null) {
+      canvasRef.current = document.createElement("canvas");
+    }
 
-    canvas.width = 320;
-    canvas.height = Math.round(320 * (videoHeight / videoWidth));
+    const canvas = canvasRef.current;
+    const width = 320;
+    const height = Math.round(width * (videoHeight / videoWidth));
+
+    if (canvas.width !== width) canvas.width = width;
+    if (canvas.height !== height) canvas.height = height;
 
     const context = canvas.getContext("2d");
 
